@@ -5,7 +5,7 @@ from colorama import *
 init() # colorama
 
 class Board:
-  def __init__(self, players, size):
+  def __init__(self, players, size, streak):
     self.players = players
     self.winners = []
     self.width, self.height = size
@@ -13,9 +13,10 @@ class Board:
     self.lowest = [self.height for i in range(self.width)]
     self.fullCols = []
     self.allMoves = []
+    self.streak = streak
   
   def __str__(self):
-    N = len(str(self.width))
+    N = len(str(self.width-1))
     numList = [f'{n:0{N}d}' for n in range(self.width)]
     digList = [[n[i] for n in numList] for i in range(N)]
     numbering = Fore.CYAN + '\n'.join(['|' + '|'.join(i) + '|' for i in digList]) + Fore.WHITE
@@ -49,28 +50,28 @@ class Player:
     return Fore.GREEN+f'{generic} (HAS WON)'+Fore.WHITE if self.hasWon else generic
   
   def check_winner(self, board:Board):
-    # check horizontal spaces
+    # check vertical spaces
     for y in range(board.height):
-      for x in range(board.width - 3):
-        if board.grid[x][y] == board.grid[x+1][y] == board.grid[x+2][y] == board.grid[x+3][y] == self.symbol:
+      for x in range(board.width - board.streak + 1):
+        if all([board.grid[x+i][y] == self.symbol for i in range(board.streak)]):
           return True
 
-    # check vertical spaces
+     # check horizontal spaces
     for x in range(board.width):
-      for y in range(board.height - 3):
-        if board.grid[x][y] == board.grid[x][y+1] == board.grid[x][y+2] == board.grid[x][y+3] == self.symbol:
+      for y in range(board.height - board.streak + 1):
+        if all([board.grid[x][y+i] == self.symbol for i in range(board.streak)]):
           return True
 
     # check / diagonal spaces
-    for x in range(board.width - 3):
-      for y in range(3, board.height):
-        if board.grid[x][y] == board.grid[x+1][y-1] == board.grid[x+2][y-2] == board.grid[x+3][y-3] == self.symbol:
+    for x in range(board.width - board.streak + 1):
+      for y in range(board.streak - 1, board.height):
+        if all([board.grid[x+i][y-i] == self.symbol for i in range(board.streak)]):
           return True
 
     # check \ diagonal spaces
-    for x in range(board.width - 3):
-      for y in range(board.height - 3):
-        if board.grid[x][y] == board.grid[x+1][y+1] == board.grid[x+2][y+2] == board.grid[x+3][y+3] == self.symbol:
+    for x in range(board.width - board.streak + 1):
+      for y in range(board.height - board.streak + 1):
+        if all([board.grid[x+i][y+i] == self.symbol for i in range(board.streak)]):
           return True
     return False  
   
@@ -125,10 +126,29 @@ def inputSettings():
     players.append(Player(name, symbol))
     playerNo = len(players)
 
+   # Defining winning streak of symbols
+  defStreak = 4
+  while True:
+    inputStreak = input('\nInput number of symbols in a row to win (winning streak)\nSYNTAX: "streak"\n(PRESS ENTER FOR DEFAULT OF 4) > ')
+    if inputStreak == '':
+      streak = defStreak
+      print(f'Default winning streak: {defStreak}')
+      break
+
+    try:
+      streak = int(inputStreak)
+      if streak < 3:
+        print('Sorry, winning streak cannot be less than 3!')
+        continue
+      break
+    except:
+      print('Sorry, wrong syntax!')
+      continue
+
   # Making the board
   boardSize = (0, 0)
-  minSize = (minLength := playerNo*2, minLength)
-  defaultSize = (defLength := math.floor(1.5*(playerNo**2)), defLength)
+  minSize = (minLength := math.floor(0.5*playerNo*streak), minLength)
+  defaultSize = (defLength := math.floor(0.375*(playerNo**2)*streak), defLength)
   
   while True:
     boardSize = input('\nInput size of board\nSYNTAX: "width height"\n(TYPE "DEF" FOR DEFAULT SIZE AND "MIN" FOR MINIUMUM SIZE) > ').upper()
@@ -157,19 +177,20 @@ def inputSettings():
   print('\n--- PLAYER NAMES & SYMBOLS ---\n(player: symbol)')
   print('\n'.join([str(p) for p in players]))
   print(f'\n--- BOARD SIZE: ---\nwidth {width}, height {height}')
+  print(f'\nWinning streak: {streak}')
 
   isOk = input('\nIs the above correct?\n(TYPE "YES" FOR YES, OTHERWISE NO) > ').upper() == 'YES'
   if not isOk: return inputSettings()
-  return players, boardSize, symbols
+  return players, boardSize, symbols, streak
 
 
 def main():
   os.system('title CONNECT 4')
 
-  players, boardSize, symbols = inputSettings()
+  players, boardSize, symbols, streak = inputSettings()
   os.system('cls')
 
-  board = Board(players, boardSize)
+  board = Board(players, boardSize, streak)
   print(board)
   
   pIndex = 0
@@ -206,9 +227,10 @@ def main():
   print('\n--- GAME RESULTS ---')
 
   # PRINTING WINNERS (IF ANY)
+  wins = [players[symbols.index(p)] for p in board.winners]
   if board.winners != []:
     print('WINNERS (IN ORDER):')
-    for p in (wins:=[players[symbols.index(p)] for p in board.winners]): print(f'  {p}')
+    for p in wins: print(f'  {p}')
 
   if board.isDraw(): print('DRAWN:') # PRINTING DRAWNS (IF ANY)
   else: print('LEFTOVER:')           # PRINTING LEFTOVER PLAYERS OTHERWISE

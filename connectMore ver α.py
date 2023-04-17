@@ -33,11 +33,8 @@ class Board:
     output += numbering
     return output
   
-  def isOver(self):
-    return len(self.winners) == len(self.players) - 1
-  
-  def isDraw(self):
-    return len(self.fullCols) == self.width
+  def isOver(self): return len(self.winners) == len(self.players) - 1
+  def isDraw(self): return len(self.fullCols) == self.width
 
 class Player:
   def __init__(self, name, symbol):
@@ -50,38 +47,28 @@ class Player:
     return Fore.GREEN+f'{generic} (HAS WON)'+Fore.WHITE if self.hasWon else generic
   
   def check_winner(self, board:Board):
-    # check vertical spaces
-    for y in range(board.height):
-      for x in range(board.width - board.streak + 1):
-        if all([board.grid[x+i][y] == self.symbol for i in range(board.streak)]):
-          return True
+    for y in range(board.width):
+      for x in range(board.height - board.streak + 1):
+        if all([board.grid[x+i][y] == self.symbol for i in range(board.streak)]): return True
 
-     # check horizontal spaces
-    for x in range(board.width):
-      for y in range(board.height - board.streak + 1):
-        if all([board.grid[x][y+i] == self.symbol for i in range(board.streak)]):
-          return True
+    for x in range(board.height):
+      for y in range(board.width - board.streak + 1):
+        if all([board.grid[x][y+i] == self.symbol for i in range(board.streak)]): return True
 
-    # check / diagonal spaces
-    for x in range(board.width - board.streak + 1):
-      for y in range(board.streak - 1, board.height):
-        if all([board.grid[x+i][y-i] == self.symbol for i in range(board.streak)]):
-          return True
+    for x in range(board.height - board.streak + 1):
+      for y in range(board.streak - 1, board.width):
+        if all([board.grid[x+i][y-i] == self.symbol for i in range(board.streak)]): return True
 
-    # check \ diagonal spaces
-    for x in range(board.width - board.streak + 1):
-      for y in range(board.height - board.streak + 1):
-        if all([board.grid[x+i][y+i] == self.symbol for i in range(board.streak)]):
-          return True
+    for x in range(board.height - board.streak + 1):
+      for y in range(board.width - board.streak + 1):
+        if all([board.grid[x+i][y+i] == self.symbol for i in range(board.streak)]): return True
     return False  
   
   def move(self, board:Board, col):
     board.grid[board.lowest[col]-1][col] = self.symbol
     board.lowest[col] -= 1
 
-    if board.lowest[col] == 0:
-      board.fullCols.append(col)
-
+    if board.lowest[col] == 0: board.fullCols.append(col)
     board.allMoves.append((board.lowest[col], col))
     
     if self.check_winner(board):
@@ -221,7 +208,8 @@ def main():
 
       os.system('cls')
       print(board)
-    except:
+    except Exception as e:
+      raise e
       print('Sorry, wrong syntax!')
   
   print('\n--- GAME RESULTS ---')

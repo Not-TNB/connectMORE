@@ -97,23 +97,23 @@ def inputSettings():
         print('Sorry, wrong syntax!')
         continue        
 
-      names.append(name)
-      symbols.append(symbol)
+      if name in names:
+        print('Sorry, name already taken')
+        continue
+      elif symbol in symbols:
+        print('Sorry, symbol already taken!')
+        continue
+      else:
+        names.append(name)
+        symbols.append(symbol)
     except:
       print('Sorry, wrong syntax!')
-      continue
-  
-    if name in names[:-1]: 
-      print('Sorry, name already taken')
-      continue
-    if symbol in symbols[:-1]: 
-      print('Sorry, symbol already taken!')
       continue
 
     players.append(Player(name, symbol))
     playerNo = len(players)
 
-   # Defining winning streak of symbols
+  # Defining winning streak of symbols
   defStreak = 4
   while True:
     inputStreak = input('\nInput number of symbols in a row to win (winning streak)\nSYNTAX: "streak"\n(PRESS ENTER FOR DEFAULT OF 4) > ')
@@ -208,8 +208,7 @@ def main():
 
       os.system('cls')
       print(board)
-    except Exception as e:
-      raise e
+    except:
       print('Sorry, wrong syntax!')
   
   print('\n--- GAME RESULTS ---')
